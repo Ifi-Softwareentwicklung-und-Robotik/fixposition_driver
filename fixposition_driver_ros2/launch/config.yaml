@@ -68,6 +68,7 @@
             sensor_to_base_yaw: 0.0
             zero_initial_yaw: false
             publish_tf: true
+            tilt_frame: ""   # e.g. "base_link": publish base_frame -> tilt_frame (roll, pitch, height); must coincide with the POI
 
         converter:
             enabled: false

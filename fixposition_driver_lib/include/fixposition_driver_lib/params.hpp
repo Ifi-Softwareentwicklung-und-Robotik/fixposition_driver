@@ -53,6 +53,7 @@ struct DriverParams {
     double nav2_planar_sensor_to_base_yaw_ = 0.0;
     bool nav2_planar_zero_initial_yaw_ = false;
     bool nav2_planar_publish_tf_ = true;
+    std::string nav2_planar_tilt_frame_ = "";
 
     enum class VelTopicType { UNSPECIFIED, TWIST, TWISTWITHCOV, ODOMETRY };
     bool converter_enabled_ = false;

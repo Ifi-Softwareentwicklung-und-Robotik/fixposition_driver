@@ -778,6 +778,34 @@ void FixpositionDriverNode::PublishPlanarOdometry(const OdometryData& odometry_d
         geometry_msgs::msg::TransformStamped tf;
         OdometryDataToTransformStamped(planar, tf);
         tf_br_->sendTransform(tf);
+
+        // base_frame -> tilt_frame: the roll/pitch (and height) projected out above, so that a body frame coinciding
+        // with the Fixposition POI hangs below the planar base frame (REP-120: base_footprint -> base_link).
+        // Uses the same pose and stamp as odom -> base_frame, so both together reproduce the full smooth pose.
+        if (!params_.nav2_planar_tilt_frame_.empty()) {
+            const Eigen::Quaterniond base_planar_q = QuaternionFromYaw(base_yaw);
+            const Eigen::Quaterniond tilt_q =
+                (base_planar_q.conjugate() * odometry_data.pose.orientation).normalized();
+            // POI relative to the base frame origin: undo the sensor_to_base offsets (x/y are given in the sensor's
+            // yaw frame, z is vertical)
+            const double cos_offset_yaw = std::cos(params_.nav2_planar_sensor_to_base_yaw_);
+            const double sin_offset_yaw = std::sin(params_.nav2_planar_sensor_to_base_yaw_);
+            const double sx = params_.nav2_planar_sensor_to_base_x_;
+            const double sy = params_.nav2_planar_sensor_to_base_y_;
+
+            geometry_msgs::msg::TransformStamped tf_tilt;
+            tf_tilt.header.stamp = tf.header.stamp;
+            tf_tilt.header.frame_id = params_.nav2_planar_base_frame_;
+            tf_tilt.child_frame_id = params_.nav2_planar_tilt_frame_;
+            tf_tilt.transform.translation.x = -(cos_offset_yaw * sx + sin_offset_yaw * sy);
+            tf_tilt.transform.translation.y = -(-sin_offset_yaw * sx + cos_offset_yaw * sy);
+            tf_tilt.transform.translation.z = -params_.nav2_planar_sensor_to_base_z_;
+            tf_tilt.transform.rotation.x = tilt_q.x();
+            tf_tilt.transform.rotation.y = tilt_q.y();
+            tf_tilt.transform.rotation.z = tilt_q.z();
+            tf_tilt.transform.rotation.w = tilt_q.w();
+            tf_br_->sendTransform(tf_tilt);
+        }
     }
 }
 

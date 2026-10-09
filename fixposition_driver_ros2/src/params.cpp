@@ -48,6 +48,7 @@ bool LoadParamsFromRos2(std::shared_ptr<rclcpp::Node>& nh, DriverParams& params)
     const std::string NAV2_PLANAR_SENSOR_TO_BASE_YAW = "planar_mode.sensor_to_base_yaw";
     const std::string NAV2_PLANAR_ZERO_INITIAL_YAW = "planar_mode.zero_initial_yaw";
     const std::string NAV2_PLANAR_PUBLISH_TF = "planar_mode.publish_tf";
+    const std::string NAV2_PLANAR_TILT_FRAME = "planar_mode.tilt_frame";
     const std::string CONVERTER_ENABLED = "converter.enabled";
     const std::string CONVERTER_INPUT_TOPIC = "converter.input_topic";
     const std::string CONVERTER_SCALE_FACTOR = "converter.scale_factor";
@@ -82,6 +83,7 @@ bool LoadParamsFromRos2(std::shared_ptr<rclcpp::Node>& nh, DriverParams& params)
     nh->declare_parameter(NAV2_PLANAR_SENSOR_TO_BASE_YAW, params.nav2_planar_sensor_to_base_yaw_);
     nh->declare_parameter(NAV2_PLANAR_ZERO_INITIAL_YAW, params.nav2_planar_zero_initial_yaw_);
     nh->declare_parameter(NAV2_PLANAR_PUBLISH_TF, params.nav2_planar_publish_tf_);
+    nh->declare_parameter(NAV2_PLANAR_TILT_FRAME, params.nav2_planar_tilt_frame_);
     nh->declare_parameter(CONVERTER_ENABLED, params.converter_enabled_);
     nh->declare_parameter(CONVERTER_INPUT_TOPIC, params.converter_input_topic_);
     nh->declare_parameter(CONVERTER_SCALE_FACTOR, params.converter_scale_factor_);
@@ -187,6 +189,10 @@ bool LoadParamsFromRos2(std::shared_ptr<rclcpp::Node>& nh, DriverParams& params)
         RCLCPP_WARN(logger, "Failed loading %s param", NAV2_PLANAR_PUBLISH_TF.c_str());
         ok = false;
     }
+    if (!nh->get_parameter(NAV2_PLANAR_TILT_FRAME, params.nav2_planar_tilt_frame_)) {
+        RCLCPP_WARN(logger, "Failed loading %s param", NAV2_PLANAR_TILT_FRAME.c_str());
+        ok = false;
+    }
     if (params.nav2_planar_enabled_ && params.nav2_planar_odom_frame_ == "map") {
         RCLCPP_WARN(logger, "%s must differ from map", NAV2_PLANAR_ODOM_FRAME.c_str());
         ok = false;
@@ -288,6 +294,7 @@ bool LoadParamsFromRos2(std::shared_ptr<rclcpp::Node>& nh, DriverParams& params)
     RCLCPP_INFO(logger, "DriverParams: planar_mode.zero_initial_yaw=%s",
                 params.nav2_planar_zero_initial_yaw_ ? "true" : "false");
     RCLCPP_INFO(logger, "DriverParams: planar_mode.publish_tf=%s", params.nav2_planar_publish_tf_ ? "true" : "false");
+    RCLCPP_INFO(logger, "DriverParams: planar_mode.tilt_frame=%s", params.nav2_planar_tilt_frame_.c_str());
     RCLCPP_INFO(logger, "DriverParams: converter_enabled=%s", params.converter_enabled_ ? "true" : "false");
     RCLCPP_INFO(logger, "DriverParams: converter_topic_type=%s", topic_type_string_.c_str());
     RCLCPP_INFO(logger, "DriverParams: converter_input_topic=%s", params.converter_input_topic_.c_str());
