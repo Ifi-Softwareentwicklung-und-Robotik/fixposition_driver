@@ -813,7 +813,7 @@ void FixpositionDriverNode::PublishPlanarMapToOdomCorrection(const OdometryData&
     }
 
     geometry_msgs::msg::TransformStamped tf;
-    tf.header.stamp = fpsdk::ros2::utils::ConvTime(odometry_data.stamp);
+    tf.header.stamp = ros2::ConvTime(odometry_data.stamp);
     tf.header.frame_id = "map";
     tf.child_frame_id = params_.nav2_planar_odom_frame_;
     tf.transform = tf2::toMsg(map_odom);
