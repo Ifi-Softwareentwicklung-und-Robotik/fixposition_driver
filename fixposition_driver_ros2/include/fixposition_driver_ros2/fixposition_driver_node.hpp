@@ -165,6 +165,7 @@ class FixpositionDriverNode {
     void ProcessOdometryData(const OdometryData& odometry_data);
     void PublishPlanarOdometry(const OdometryData& odometry_data);
     void PublishPlanarMapToOdomCorrection(const OdometryData& odometry_data);
+    void PublishPlanarTiltTf(const OdometryData& odometry_data);
     void PublishNav2Tf();
 };
 

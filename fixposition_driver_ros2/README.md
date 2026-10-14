@@ -61,7 +61,11 @@ message keeps z, roll, and pitch projected out.
 
 With `tilt_frame` set (for example `base_link`), the driver additionally publishes
 `base_frame -> tilt_frame` with the roll, pitch and height that planar mode projects
-out, using the same smooth pose and timestamp as `planar_odom_frame -> base_frame`.
+out. It uses the global pose (FP_A-ODOMENU, same source and timestamp as the
+`map -> planar_odom_frame` correction), not the smooth pose: the smooth pose belongs
+to `FP_POISH`, whose orientation can drift by a few degrees relative to `FP_POI`.
+Together, `map -> planar_odom_frame -> base_frame -> tilt_frame` then reproduces
+`FP_ENU0 -> FP_POI`. Requires FP_A-ODOMENU in `messages`.
 This gives the REP-120 chain `odom -> base_footprint -> base_link`, with the robot
 body and its sensors below `base_link`. `tilt_frame` must coincide with the Fixposition
 POI, and `base_frame` must not be published by anything else (e.g. a fixed URDF joint).
