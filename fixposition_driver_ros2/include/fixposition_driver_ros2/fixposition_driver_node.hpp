@@ -158,6 +158,10 @@ class FixpositionDriverNode {
         double yaw_ = 0.0;
         bool odom_base_valid_ = false;
         tf2::Transform odom_base_;
+        fpsdk::common::time::Time odom_base_stamp_;  //!< Epoch of odom_base_ (FP_A-ODOMSH)
+        bool map_base_valid_ = false;
+        tf2::Transform map_base_;
+        fpsdk::common::time::Time map_base_stamp_;  //!< Epoch of map_base_ (FP_A-ODOMENU)
     };
     PlanarOrigin planar_origin_;
 
@@ -166,6 +170,7 @@ class FixpositionDriverNode {
     void PublishPlanarOdometry(const OdometryData& odometry_data);
     void PublishPlanarMapToOdomCorrection(const OdometryData& odometry_data);
     void PublishPlanarTiltTf(const OdometryData& odometry_data);
+    void PublishPlanarMapToOdomIfSameEpoch();  // planar_origin_.mutex_ must be held
     void PublishNav2Tf();
 };
 

@@ -761,7 +761,9 @@ void FixpositionDriverNode::PublishPlanarOdometry(const OdometryData& odometry_d
     const Eigen::Quaterniond odom_base_q = QuaternionFromYaw(NormalizeAngle(base_yaw - planar_origin_.yaw_));
     odom_base.setRotation(tf2::Quaternion(odom_base_q.x(), odom_base_q.y(), odom_base_q.z(), odom_base_q.w()));
     planar_origin_.odom_base_ = odom_base;
+    planar_origin_.odom_base_stamp_ = odometry_data.stamp;
     planar_origin_.odom_base_valid_ = true;
+    PublishPlanarMapToOdomIfSameEpoch();
 
     const double cos_sensor_to_base = std::cos(-params_.nav2_planar_sensor_to_base_yaw_);
     const double sin_sensor_to_base = std::sin(-params_.nav2_planar_sensor_to_base_yaw_);
@@ -804,17 +806,29 @@ void FixpositionDriverNode::PublishPlanarMapToOdomCorrection(const OdometryData&
     const Eigen::Quaterniond map_base_q = QuaternionFromYaw(base_yaw);
     map_base.setRotation(tf2::Quaternion(map_base_q.x(), map_base_q.y(), map_base_q.z(), map_base_q.w()));
 
-    tf2::Transform map_odom;
-    {
-        std::unique_lock<std::mutex> lock(planar_origin_.mutex_);
-        if (!planar_origin_.latched_ || !planar_origin_.odom_base_valid_) {
-            return;
-        }
-        map_odom = map_base * planar_origin_.odom_base_.inverse();
+    std::unique_lock<std::mutex> lock(planar_origin_.mutex_);
+    planar_origin_.map_base_ = map_base;
+    planar_origin_.map_base_stamp_ = odometry_data.stamp;
+    planar_origin_.map_base_valid_ = true;
+    PublishPlanarMapToOdomIfSameEpoch();
+}
+
+// ---------------------------------------------------------------------------------------------------------------------
+
+void FixpositionDriverNode::PublishPlanarMapToOdomIfSameEpoch() {
+    // map -> odom = map_base * odom_base^-1 is only correct if both poses belong to the same epoch. FP_A-ODOMENU
+    // usually arrives just before FP_A-ODOMSH of the same epoch, so combining it with the latest odom_base would use
+    // the previous epoch and shift map -> base_frame by one epoch of motion (~7 cm at 1.5 m/s). Publish once both
+    // poses of an epoch are in, whichever arrives last.
+    if (!planar_origin_.latched_ || !planar_origin_.odom_base_valid_ || !planar_origin_.map_base_valid_ ||
+        planar_origin_.odom_base_stamp_ != planar_origin_.map_base_stamp_) {
+        return;
     }
+    const tf2::Transform map_odom = planar_origin_.map_base_ * planar_origin_.odom_base_.inverse();
+    planar_origin_.map_base_valid_ = false;  // publish each epoch only once
 
     geometry_msgs::msg::TransformStamped tf;
-    tf.header.stamp = ros2::ConvTime(odometry_data.stamp);
+    tf.header.stamp = ros2::ConvTime(planar_origin_.map_base_stamp_);
     tf.header.frame_id = "map";
     tf.child_frame_id = params_.nav2_planar_odom_frame_;
     tf.transform = tf2::toMsg(map_odom);
