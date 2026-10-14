@@ -13,12 +13,20 @@
 #include <sensor_msgs/msg/imu.hpp>
 #include <sensor_msgs/msg/nav_sat_fix.hpp>
 #include <std_msgs/msg/u_int8_multi_array.hpp>
-#include <tf2/LinearMath/Transform.hpp>
 #include <tf2_eigen/tf2_eigen.hpp>
 #include <tf2_geometry_msgs/tf2_geometry_msgs.hpp>
+// Older Jazzy releases of tf2/tf2_ros only ship the legacy .h headers
+#if __has_include(<tf2_ros/transform_listener.hpp>)
+#include <tf2/LinearMath/Transform.hpp>
 #include <tf2_ros/static_transform_broadcaster.hpp>
 #include <tf2_ros/transform_broadcaster.hpp>
 #include <tf2_ros/transform_listener.hpp>
+#else
+#include <tf2/LinearMath/Transform.h>
+#include <tf2_ros/static_transform_broadcaster.h>
+#include <tf2_ros/transform_broadcaster.h>
+#include <tf2_ros/transform_listener.h>
+#endif
 
 // RTCM
 #include <rtcm_msgs/msg/message.hpp>
